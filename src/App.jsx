@@ -426,76 +426,6 @@ function drawStripes(ctx, x, y, w, h) {
   cols.forEach((col, i) => { ctx.fillStyle = col; ctx.fillRect(x + i * seg, y, seg, h); });
 }
 
-// Camadas de "cartaz velho": sépia, vinheta, manchas, vincos, grão e moldura gasta.
-function applyVintage(ctx, W, H) {
-  // tom desbotado/sépia
-  ctx.save();
-  ctx.globalCompositeOperation = "multiply";
-  const sg = ctx.createLinearGradient(0, 0, 0, H);
-  sg.addColorStop(0, "rgba(214,174,107,.12)");
-  sg.addColorStop(.5, "rgba(255,255,255,0)");
-  sg.addColorStop(1, "rgba(143,97,34,.18)");
-  ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H);
-  ctx.restore();
-
-  // vinheta escura nos cantos
-  const vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.34, W / 2, H / 2, H * 0.74);
-  vg.addColorStop(0, "rgba(0,0,0,0)");
-  vg.addColorStop(1, "rgba(40,26,8,.44)");
-  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
-
-  // manchas de umidade/envelhecimento
-  for (let i = 0; i < 16; i++) {
-    const x = Math.random() * W, y = Math.random() * H, r = 22 + Math.random() * 95;
-    const a = 0.04 + Math.random() * 0.07;
-    const st = ctx.createRadialGradient(x, y, 0, x, y, r);
-    st.addColorStop(0, `rgba(96,62,20,${a})`);
-    st.addColorStop(1, "rgba(96,62,20,0)");
-    ctx.fillStyle = st; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-  }
-
-  // vincos e arranhões
-  ctx.save();
-  for (let i = 0; i < 24; i++) {
-    const vertical = Math.random() < 0.5;
-    ctx.strokeStyle = Math.random() < 0.5 ? "rgba(255,248,230,.30)" : "rgba(40,26,8,.16)";
-    ctx.lineWidth = Math.random() < 0.85 ? 1 : 2;
-    ctx.beginPath();
-    if (vertical) { const x = Math.random() * W; ctx.moveTo(x, Math.random() * H * 0.3); ctx.lineTo(x + (Math.random() * 30 - 15), H * (0.6 + Math.random() * 0.4)); }
-    else { const y = Math.random() * H; ctx.moveTo(Math.random() * W * 0.3, y); ctx.lineTo(W * (0.6 + Math.random() * 0.4), y + (Math.random() * 30 - 15)); }
-    ctx.stroke();
-  }
-  ctx.restore();
-
-  // grão (ruído pontilhado)
-  const n = Math.floor((W * H) / 680);
-  for (let i = 0; i < n; i++) {
-    const x = Math.random() * W, y = Math.random() * H;
-    ctx.fillStyle = Math.random() < 0.5 ? "rgba(0,0,0,.05)" : "rgba(255,255,255,.06)";
-    ctx.fillRect(x, y, 1.4, 1.4);
-  }
-
-  // moldura escura gasta
-  ctx.strokeStyle = "rgba(24,24,24,.85)"; ctx.lineWidth = 10;
-  ctx.strokeRect(26, 26, W - 52, H - 52);
-  // tinta descascada na moldura (lascas cor de papel)
-  ctx.fillStyle = P.cream;
-  for (let i = 0; i < 70; i++) {
-    const edge = Math.floor(Math.random() * 4); const s = 4 + Math.random() * 16;
-    let x, y;
-    if (edge === 0) { x = Math.random() * W; y = 26; }
-    else if (edge === 1) { x = Math.random() * W; y = H - 26; }
-    else if (edge === 2) { x = 26; y = Math.random() * H; }
-    else { x = W - 26; y = Math.random() * H; }
-    ctx.beginPath(); ctx.arc(x, y, s, 0, Math.PI * 2); ctx.fill();
-  }
-
-  // cantos amassados
-  ctx.fillStyle = "rgba(40,26,8,.18)";
-  const corner = (cx, cy, dx, dy) => { ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + dx, cy); ctx.lineTo(cx, cy + dy); ctx.closePath(); ctx.fill(); };
-  corner(0, 0, 80, 80); corner(W, 0, -80, 80); corner(0, H, 80, -80); corner(W, H, -80, -80);
-}
-
 async function generatePoster(user, sum) {
   const W = 1080, H = 1500;
   const c = document.createElement("canvas");
@@ -578,9 +508,6 @@ async function generatePoster(user, sum) {
   drawStripes(ctx, W / 2 - 220, H - 96, 440, 10);
   ctx.fillStyle = "#6b655c"; ctx.font = "700 22px 'Montserrat'"; SP(3);
   ctx.fillText("EUA · MÉXICO · CANADÁ — 11 JUN A 19 JUL", W / 2, H - 50); SP(0);
-
-  // ---- desgaste de cartaz antigo ----
-  applyVintage(ctx, W, H);
 
   const url = c.toDataURL("image/png");
   const a = document.createElement("a");
